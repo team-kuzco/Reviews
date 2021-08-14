@@ -8,7 +8,7 @@ CREATE TABLE Review_data (
   Review_id INT NOT NULL,
   Product_id INT NOT NULL,
   Rating INT NOT NULL,
-  Date INT NOT NULL,
+  Date BIGINT NOT NULL,
   Summary VARCHAR(60) NOT NULL,
   Body VARCHAR(1000) NOT NULL,
   recommend INT NOT NULL,
