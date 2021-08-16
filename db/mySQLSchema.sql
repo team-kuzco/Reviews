@@ -5,7 +5,7 @@ CREATE DATABASE Reviews;
 USE Reviews;
 
 CREATE TABLE Review_data (
-  Review_id INT NOT NULL,
+  Review_id INT NOT NULL AUTO_INCREMENT,
   Product_id INT NOT NULL,
   Rating INT NOT NULL,
   Date BIGINT NOT NULL,
@@ -21,26 +21,28 @@ CREATE TABLE Review_data (
 );
 
 CREATE TABLE Characteristics (
-  Characteristic_id INT NOT NULL,
+  Characteristic_id INT NOT NULL AUTO_INCREMENT,
   Product_id INT,
   name TINYTEXT NOT NULL,
   PRIMARY KEY (Characteristic_id)
 );
 
 CREATE TABLE Photos (
-  id INT NOT NULL,
+  id INT NOT NULL AUTO_INCREMENT,
   review_id INT,
   photo_url TEXT,
   PRIMARY KEY (id)
 );
 
 CREATE TABLE Characteristic_reviews (
-  id INT NOT NULL,
+  id INT NOT NULL AUTO_INCREMENT,
   characteristic_id INT NOT NULL,
   review_id INT NOT NULL,
   rating INT NOT NULL,
   PRIMARY KEY (id)
 );
+
+ALTER TABLE Review_data ADD INDEX idx_product_id (Product_id);
 
 ALTER TABLE Characteristic_reviews
 ADD FOREIGN KEY (characteristic_id) REFERENCES Characteristics(Characteristic_id),
