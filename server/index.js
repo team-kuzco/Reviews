@@ -26,7 +26,6 @@ app.get('/reviews', (req, res) => {
     count: limit,
     results: [],
   };
-  // eslint-disable-next-line no-multi-assign
   let sortBy;
   if (req.query.sort === 'helpful') {
     sortBy = 'Helpfulness';
@@ -35,9 +34,6 @@ app.get('/reviews', (req, res) => {
   } else {
     sortBy = 'Helpfulness DESC, Date';
   }
-  // const sortBy = (req.query.sort === 'helpful'
-  //   ? 'Helpfulness'
-  //   : (req.query.sort === 'newest' ? 'Date' : 'Helpfulness DESC, Date'));
   const connectionArgs = [productId, limit];
   connection.query(
     `SELECT * from Review_data WHERE Product_id = ? AND reported <> 1 ORDER BY ${sortBy} DESC LIMIT ?`,
@@ -51,9 +47,10 @@ app.get('/reviews', (req, res) => {
             review_id: result[i].Review_id,
             rating: result[i].Rating,
             summary: result[i].Summary,
-            recommend: (result[i].recommend = 0
+            // eslint-disable-next-line no-nested-ternary
+            recommend: (result[i].recommend === 0
               ? false
-              : (result[i].recommend = 1 ? true : null)),
+              : (result[i].recommend === 1 ? true : null)),
             response: result[i].Response,
             body: result[i].Body,
             date: new Date(result[i].Date),
@@ -67,7 +64,6 @@ app.get('/reviews', (req, res) => {
               if (err) {
                 res.status(500);
                 res.send(error);
-                console.error(error);
               } else {
                 for (let j = 0; j < photoResult.length; j += 1) {
                   reveiwResponse.results[i].photos.push({
@@ -119,7 +115,6 @@ app.get('/reviews/meta', (req, res) => {
             [result[i].Review_id],
             (error, metaResult) => {
               if (err) {
-                console.error(err);
                 res.sendStatus(400);
               } else {
                 for (let j = 0; j < metaResult.length; j += 1) {
@@ -148,43 +143,50 @@ app.get('/reviews/meta', (req, res) => {
 app.post('/reviews', (req, res) => {
   const date = new Date().valueOf();
   const queryArgs = [
-    req.query.product_id,
-    req.query.rating,
+    req.body.product_id,
+    req.body.rating,
     date,
-    req.query.summary,
-    req.query.body,
-    req.query.recommend,
-    req.query.name,
-    req.query.email,
+    req.body.summary,
+    req.body.body,
+    req.body.recommend,
+    req.body.name,
+    req.body.email,
   ];
   connection.query(
     'SELECT Review_id from Review_data ORDER BY Review_id DESC LIMIT 1',
     (err, reviewId) => {
       if (err) {
         res.sendStatus(500);
-        console.error(err);
       } else {
+        const id = reviewId[0].Review_id + 1;
         connection.query(
-          `INSERT INTO Review_data (Review_id, Product_id, Rating, Date, Summary, Body, recommend, Reviewer_name, Reviewer_email, Helpfulness, reported) VALUES (${
-            reviewId[0].Review_id + 1
-          }, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)`,
+          'INSERT INTO Review_data (Product_id, Rating, Date, Summary, Body, recommend, Reviewer_name, Reviewer_email, Helpfulness, reported) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)',
           queryArgs,
           (error) => {
-            if (err) {
-              console.error(error);
+            if (error) {
               res.status(500);
             } else {
               res.status(201);
             }
           },
         );
-        if (req.query.photos) {
-          for (let i = 0; i < req.query.photos.length; i += 1) {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const charId in req.body.characteristics) {
+          connection.query('INSERT INTO Characteristic_reviews (characteristic_id, review_id, rating) VALUES (?, ?, ?)', [charId, id, req.body.characteristics[charId]], (error) => {
+            if (error) {
+              res.status(500);
+            } else {
+              res.status(201);
+            }
+          });
+        }
+        if (req.body.photos.length) {
+          for (let i = 0; i < req.body.photos.length; i += 1) {
             connection.query(
               `INSERT INTO Photos (review_id, photo_url) VALUES (${
-                reviewId[0].Review_id + 1
+                id
               }, ?)`,
-              [req.query.photos[i]],
+              [req.body.photos[i]],
               (error) => {
                 if (error) {
                   res.status(500);
@@ -207,7 +209,6 @@ app.put('/reviews/:review_id/helpful', (req, res) => {
     [req.params.review_id],
     (err) => {
       if (err) {
-        console.error(err);
         res.sendStatus(500);
         res.end();
       } else {
@@ -224,7 +225,6 @@ app.put('/reviews/:review_id/report', (req, res) => {
     [req.params.review_id],
     (err) => {
       if (err) {
-        console.error(err);
         res.sendStatus(500);
         res.end();
       } else {
