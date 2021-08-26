@@ -1,11 +1,11 @@
 const mysql = require('mysql');
 
-var connection = mysql.createConnection({
-  host: 'localhost',
+const connection = mysql.createConnection({
+  host: '18.191.200.241',
   user: 'root',
   password: 'password',
-  database: 'Reviews'
-})
+  database: 'Reviews',
+});
 
 connection.connect();
 
